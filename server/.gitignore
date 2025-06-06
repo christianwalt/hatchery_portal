@@ -1,0 +1,86 @@
+# Python
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+.Python
+env/
+venv/
+.env
+pip-log.txt
+pip-delete-this-arg.txt
+.tox/
+.nox/
+
+# Django specific
+*.log
+*.sqlite3
+media/
+static_root/ # Or whatever your `STATIC_ROOT` is set to
+test_media/ # If you have a separate media folder for tests
+
+# Development and OS specific
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*~
+.nvmrc
+
+# Environment variables (crucial for security)
+.env
+.flaskenv
+
+# Database backups (if you have any local ones)
+*.sql
+*.psql
+*.db
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+.coverage
+.cache/
+
+# Testing
+.pytest_cache/
+htmlcov/
+
+# MyPy (Type checking)
+.mypy_cache/
+
+# Celery (if used)
+celerybeat.pid
+
+# npm (if you're using Node.js for frontend assets)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Frontend build outputs (if applicable)
+dist/ # or build/ or wherever your frontend assets are compiled to
+
+# Docker (if used for local development, sensitive files)
+.dockerignore
+docker-compose.override.yml # If it contains local secrets
+*.env # For .env files used by Docker Compose
+
+# Editors and IDEs
+*.sublime-project
+*.sublime-workspace
+*.KomodoProject
+*.KomodoWorkspace
+.project
+.pydevproject
+.settings/
+.idea/
+.vscode/
+
+# Jupyter Notebook (if used)
+.ipynb_checkpoints/
+
+# System files
+thumbs.db
+ehthumbs.db
+desktop.ini
