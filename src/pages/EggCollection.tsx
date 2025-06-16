@@ -19,7 +19,6 @@ import {
   Grid,
   useTheme,
   Tooltip,
-  Divider,
   Chip,
   FormControl,
   InputLabel,
@@ -35,7 +34,6 @@ import {
   Egg as EggIcon,
   FilterNone as FilterNoneIcon,
   Info as InfoIcon,
-  ArrowDropDown as ArrowDropDownIcon,
 } from '@mui/icons-material';
 import { alpha, Theme } from '@mui/material/styles';
 
@@ -138,10 +136,10 @@ export default function EggCollection() {
     label: "",
     animalType: "",
     typeOfEggs: "",
-    fullTrays: 0,
-    unfullTrays: 0,
-    unfullTrayCount: 0,
-    damagedEggs: 0,
+    fullTrays: null as unknown as number,
+    unfullTrays: null as unknown as number,
+    unfullTrayCount: null as unknown as number,
+    damagedEggs: null as unknown as number,
     date: new Date().toISOString().split('T')[0]
   };
   
@@ -172,22 +170,22 @@ export default function EggCollection() {
       isValid = false;
     }
 
-    if (formData.fullTrays < 0) {
+    if (formData.fullTrays === null || formData.fullTrays < 0) {
       errors.fullTrays = "Must be a non-negative number";
       isValid = false;
     }
 
-    if (formData.unfullTrays < 0) {
+    if (formData.unfullTrays === null || formData.unfullTrays < 0) {
       errors.unfullTrays = "Must be a non-negative number";
       isValid = false;
     }
 
-    if (formData.unfullTrayCount < 0) {
+    if (formData.unfullTrayCount === null || formData.unfullTrayCount < 0) {
       errors.unfullTrayCount = "Must be a non-negative number";
       isValid = false;
     }
 
-    if (formData.damagedEggs < 0) {
+    if (formData.damagedEggs === null || formData.damagedEggs < 0) {
       errors.damagedEggs = "Must be a non-negative number";
       isValid = false;
     }
@@ -215,7 +213,10 @@ export default function EggCollection() {
   // Calculate total eggs for a single entry
   const calculateTotalEggs = (entry: EggCollectionEntry): number => {
     // Full trays (30 eggs each) + unfull tray count - damaged eggs
-    return (entry.fullTrays * 30) + entry.unfullTrayCount - entry.damagedEggs;
+    const fullTraysCount = (entry.fullTrays || 0) * 30;
+    const unfullCount = entry.unfullTrayCount || 0;
+    const damagedCount = entry.damagedEggs || 0;
+    return fullTraysCount + unfullCount - damagedCount;
   };
 
   const totals = calculateTotals();
@@ -261,11 +262,11 @@ export default function EggCollection() {
     const { name, value } = e.target;
     
     if (name) {
-      let newValue: string | number = value as string;
+      let newValue: string | number | null = value as string;
       
       // Convert string values to numbers for numeric fields
       if (['fullTrays', 'unfullTrays', 'unfullTrayCount', 'damagedEggs'].includes(name)) {
-        newValue = value === '' ? 0 : Number(value);
+        newValue = value === '' ? null : Number(value);
       }
       
       setFormData(prev => ({
@@ -645,344 +646,312 @@ export default function EggCollection() {
           {isEditing ? 'Edit Egg Collection' : 'Add New Egg Collection'}
         </DialogTitle>
         <DialogContent sx={{ px: 3, py: 3 }}>
-          {/* Form instructions */}
+          {/* Form Title and Instructions */}
           <Box 
             sx={{ 
-              p: 2, 
-              mb: 3, 
-              bgcolor: (theme: Theme) => alpha(theme.palette.info.light, 0.1),
-              borderRadius: 1,
-              border: '1px solid',
-              borderColor: 'info.light',
+              mb: 4,
               display: 'flex',
-              gap: 1
+              flexDirection: 'column',
+              gap: 2
             }}
           >
-            <InfoIcon color="info" sx={{ mt: 0.2 }} />
-            <Box>
-              <Typography variant="subtitle2" color="info.main" fontWeight={600}>
-                Instructions:
-              </Typography>
-              <Typography variant="body2">
-                Fill in the required information for egg collection. Ensure all fields marked with * are completed.
-              </Typography>
+            <Typography variant="h6" color="primary" fontWeight={600}>
+              {isEditing ? 'Update Egg Collection Details' : 'New Egg Collection Entry'}
+            </Typography>
+            <Box 
+              sx={{ 
+                p: 2, 
+                bgcolor: (theme: Theme) => alpha(theme.palette.info.light, 0.1),
+                borderRadius: 1,
+                border: '1px solid',
+                borderColor: 'info.light',
+                display: 'flex',
+                gap: 1
+              }}
+            >
+              <InfoIcon color="info" sx={{ mt: 0.2 }} />
+              <Box>
+                <Typography variant="subtitle2" color="info.main" fontWeight={600}>
+                  Instructions:
+                </Typography>
+                <Typography variant="body2">
+                  Fill in the required information for egg collection. All fields marked with * are required.
+                </Typography>
+              </Box>
             </Box>
           </Box>
           
-          <Grid container spacing={2.5}>
-            {/* Section: Basic Information */}
+          <Grid container spacing={3}>
+            {/* Section 1: Collection Details */}
             <Grid item xs={12}>
-              <Divider sx={{ my: 1 }}>
-                <Chip label="Basic Information" color="primary" size="small" />
-              </Divider>
+              <Typography variant="subtitle1" fontWeight={600} color="primary" gutterBottom>
+                1. Collection Details
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    name="date"
+                    label="Collection Date *"
+                    type="date"
+                    value={formData.date}
+                    onChange={handleInputChange}
+                    fullWidth
+                    required
+                    InputLabelProps={{ shrink: true }}
+                    variant="outlined"
+                    sx={{ 
+                      '& .MuiOutlinedInput-root': { 
+                        borderRadius: 1,
+                        bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.05)
+                      }
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    name="farmerName"
+                    label="Farmer Name *"
+                    value={formData.farmerName}
+                    onChange={handleInputChange}
+                    fullWidth
+                    required
+                    error={!!formErrors.farmerName}
+                    helperText={formErrors.farmerName}
+                    placeholder="e.g. Kikulwe"
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    sx={{ 
+                      '& .MuiOutlinedInput-root': { 
+                        borderRadius: 1
+                      }
+                    }}
+                  />
+                </Grid>
+              </Grid>
             </Grid>
-            
-            <Grid item xs={12} md={6}>
-          <TextField
-            name="date"
-                label="Collection Date"
-            type="date"
-                value={formData.date}
-                onChange={handleInputChange}
-                fullWidth
-                required
-                InputLabelProps={{ shrink: true }}
-                variant="outlined"
-                sx={{ 
-                  '& .MuiOutlinedInput-root': { 
-                    borderRadius: 1,
-                    bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.05)
-                  }
-                }}
-              />
-            </Grid>
-            
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="farmerName"
-                label="Farmer Name"
-                value={formData.farmerName}
-                onChange={handleInputChange}
-                fullWidth
-                required
-                error={!!formErrors.farmerName}
-                helperText={formErrors.farmerName}
-                placeholder="e.g. Kikulwe"
-                variant="outlined"
-                InputLabelProps={{ shrink: true }}
-                sx={{ 
-                  '& .MuiOutlinedInput-root': { 
-                    borderRadius: 1,
-                    bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.05)
-                  }
-                }}
-              />
-            </Grid>
-            
-            {/* Section: Identification */}
+
+            {/* Section 2: Source Information */}
             <Grid item xs={12}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                <Divider sx={{ my: 1, flexGrow: 1, mr: 2 }}>
-                  <Chip label="Egg Information" color="primary" size="small" />
-                </Divider>
-                <Box 
-                  component="span" 
-                  sx={{ 
-                    py: 0.5, 
-                    px: 2, 
-                    bgcolor: 'success.main', 
-                    color: 'white', 
-                    borderRadius: 4,
-                    fontSize: '0.75rem',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  Animal Type
-                </Box>
-              </Box>
-            </Grid>
-            
-            <Grid item xs={12} md={4}>
-              <TextField
-                name="label"
-                label="Label/House ID"
-                value={formData.label}
-                onChange={handleInputChange}
-                fullWidth
-                required
-                error={!!formErrors.label}
-                helperText={formErrors.label || "Identifier for the pen/house"}
-                placeholder="e.g. II"
-                variant="outlined"
-                InputLabelProps={{ shrink: true }}
-                sx={{ 
-                  '& .MuiOutlinedInput-root': { 
-                    borderRadius: 1,
-                    bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.05)
-                  }
-                }}
-              />
-            </Grid>
-            
-            <Grid item xs={12} md={4}>
-              <FormControl 
-                fullWidth 
-                required
-                error={!!formErrors.animalType}
-                sx={{ 
-                  '& .MuiOutlinedInput-root': { 
-                    borderRadius: 1,
-                    bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.05)
-                  }
-                }}
-              >
-                <InputLabel id="animal-type-label">Animal Type *</InputLabel>
-                <Select
-                  labelId="animal-type-label"
-                  id="animal-type"
-                  name="animalType"
-                  value={formData.animalType}
-                  onChange={handleInputChange}
-                  label="Animal Type *"
-                  IconComponent={() => (
-                    <Box sx={{ pr: 1, display: 'flex', alignItems: 'center' }}>
-                      <ArrowDropDownIcon />
-                    </Box>
-                  )}
-                >
-                  {poultryAnimals.map((animal) => (
-                    <MenuItem 
-                      key={animal.name} 
-                      value={animal.name}
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        width: '100%',
-                        py: 1.5
+              <Typography variant="subtitle1" fontWeight={600} color="primary" gutterBottom>
+                2. Source Information
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    name="label"
+                    label="Label/House ID *"
+                    value={formData.label}
+                    onChange={handleInputChange}
+                    fullWidth
+                    required
+                    error={!!formErrors.label}
+                    helperText={formErrors.label || "Identifier for the pen/house"}
+                    placeholder="e.g. II"
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    sx={{ 
+                      '& .MuiOutlinedInput-root': { 
+                        borderRadius: 1,
+                        bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.05)
+                      }
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <FormControl 
+                    fullWidth 
+                    required
+                    error={!!formErrors.animalType}
+                  >
+                    <InputLabel id="animal-type-label">Animal Type *</InputLabel>
+                    <Select
+                      labelId="animal-type-label"
+                      id="animal-type"
+                      name="animalType"
+                      value={formData.animalType}
+                      onChange={handleInputChange}
+                      label="Animal Type *"
+                      sx={{ 
+                        '& .MuiOutlinedInput-root': { 
+                          borderRadius: 1,
+                          bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.05)
+                        }
                       }}
                     >
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <EggIcon color="primary" fontSize="small" />
-                        <Typography>{animal.name}</Typography>
-                      </Box>
-                      <Chip 
-                        label={`${animal.hatchingDays} days hatching`} 
-                        size="small" 
-                        color="primary" 
-                        variant="outlined"
-                        sx={{ fontSize: '0.75rem' }}
-                      />
-                    </MenuItem>
-                  ))}
-                </Select>
-                {formErrors.animalType && (
-                  <Typography variant="caption" color="error">
-                    {formErrors.animalType}
-                  </Typography>
-                )}
-              </FormControl>
-            </Grid>
-            
-            <Grid item xs={12} md={4}>
-              <TextField
-                name="typeOfEggs"
-                label="Type of Eggs"
-                value={formData.typeOfEggs}
-                onChange={handleInputChange}
-                fullWidth
-                required
-                error={!!formErrors.typeOfEggs}
-                helperText={formErrors.typeOfEggs || "e.g. Broiler eggs, Layer eggs"}
-                placeholder="e.g. Broiler eggs"
-                variant="outlined"
-                InputLabelProps={{ shrink: true }}
-                sx={{ 
-                  '& .MuiOutlinedInput-root': { 
-                    borderRadius: 1,
-                    bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.05)
-                  }
-                }}
-              />
+                      {poultryAnimals.map((animal) => (
+                        <MenuItem key={animal.name} value={animal.name}>
+                          {animal.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    name="typeOfEggs"
+                    label="Type of Eggs *"
+                    value={formData.typeOfEggs}
+                    onChange={handleInputChange}
+                    fullWidth
+                    required
+                    error={!!formErrors.typeOfEggs}
+                    helperText={formErrors.typeOfEggs}
+                    placeholder="e.g. Broiler eggs"
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    sx={{ 
+                      '& .MuiOutlinedInput-root': { 
+                        borderRadius: 1
+                      }
+                    }}
+                  />
+                </Grid>
+              </Grid>
             </Grid>
 
-            {/* Section: Quantity Information */}
+            {/* Section 3: Egg Count Information */}
             <Grid item xs={12}>
-              <Divider sx={{ my: 1 }}>
-                <Chip label="Quantity Information" color="primary" size="small" />
-              </Divider>
+              <Typography variant="subtitle1" fontWeight={600} color="primary" gutterBottom>
+                3. Egg Count Information
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    name="fullTrays"
+                    label="Full Trays *"
+                    type="number"
+                    value={formData.fullTrays === null ? '' : formData.fullTrays}
+                    onChange={handleInputChange}
+                    fullWidth
+                    required
+                    error={!!formErrors.fullTrays}
+                    helperText={formErrors.fullTrays || "Number of complete trays (30 eggs each)"}
+                    InputProps={{ inputProps: { min: 0 } }}
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    sx={{ 
+                      '& .MuiOutlinedInput-root': { 
+                        borderRadius: 1
+                      }
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    name="unfullTrays"
+                    label="Unfull Trays"
+                    type="number"
+                    value={formData.unfullTrays === null ? '' : formData.unfullTrays}
+                    onChange={handleInputChange}
+                    fullWidth
+                    error={!!formErrors.unfullTrays}
+                    helperText={formErrors.unfullTrays || "Number of incomplete trays"}
+                    InputProps={{ inputProps: { min: 0 } }}
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    sx={{ 
+                      '& .MuiOutlinedInput-root': { 
+                        borderRadius: 1
+                      }
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    name="unfullTrayCount"
+                    label="Eggs in Unfull Trays"
+                    type="number"
+                    value={formData.unfullTrayCount === null ? '' : formData.unfullTrayCount}
+                    onChange={handleInputChange}
+                    fullWidth
+                    error={!!formErrors.unfullTrayCount}
+                    helperText={formErrors.unfullTrayCount || "Total eggs in incomplete trays"}
+                    InputProps={{ inputProps: { min: 0 } }}
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    sx={{ 
+                      '& .MuiOutlinedInput-root': { 
+                        borderRadius: 1
+                      }
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    name="damagedEggs"
+                    label="Damaged Eggs"
+                    type="number"
+                    value={formData.damagedEggs === null ? '' : formData.damagedEggs}
+                    onChange={handleInputChange}
+                    fullWidth
+                    error={!!formErrors.damagedEggs}
+                    helperText={formErrors.damagedEggs || "Number of damaged/broken eggs"}
+                    InputProps={{ inputProps: { min: 0 } }}
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    sx={{ 
+                      '& .MuiOutlinedInput-root': { 
+                        borderRadius: 1
+                      }
+                    }}
+                  />
+                </Grid>
+              </Grid>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                name="fullTrays"
-                label="Full Trays"
-                type="number"
-                value={formData.fullTrays}
-                onChange={handleInputChange}
-            fullWidth
-                required
-                error={!!formErrors.fullTrays}
-                helperText={formErrors.fullTrays || "30 eggs per tray"}
-                inputProps={{ min: 0 }}
-            variant="outlined"
-                InputLabelProps={{ shrink: true }}
-                sx={{ 
-                  '& .MuiOutlinedInput-root': { 
-                    borderRadius: 1,
-                    bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.05)
-                  }
-                }}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6} md={3}>
-          <TextField
-                name="unfullTrays"
-                label="Unfull Trays"
-            type="number"
-                value={formData.unfullTrays}
-                onChange={handleInputChange}
-            fullWidth
-                required
-                error={!!formErrors.unfullTrays}
-                helperText={formErrors.unfullTrays || "Number of partial trays"}
-                inputProps={{ min: 0 }}
-            variant="outlined"
-                InputLabelProps={{ shrink: true }}
-                sx={{ 
-                  '& .MuiOutlinedInput-root': { 
-                    borderRadius: 1,
-                    bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.05)
-                  }
-                }}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6} md={3}>
-          <TextField
-                name="unfullTrayCount"
-                label="Eggs in Unfull Trays"
-                type="number"
-                value={formData.unfullTrayCount}
-                onChange={handleInputChange}
-            fullWidth
-                required
-                error={!!formErrors.unfullTrayCount}
-                helperText={formErrors.unfullTrayCount || "Total eggs in partial trays"}
-                inputProps={{ min: 0 }}
-            variant="outlined"
-                InputLabelProps={{ shrink: true }}
-                sx={{ 
-                  '& .MuiOutlinedInput-root': { 
-                    borderRadius: 1,
-                    bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.05)
-                  }
-                }}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6} md={3}>
-          <TextField
-                name="damagedEggs"
-                label="Damaged Eggs"
-                type="number"
-                value={formData.damagedEggs}
-                onChange={handleInputChange}
-            fullWidth
-                required
-                error={!!formErrors.damagedEggs}
-                helperText={formErrors.damagedEggs || "Number of damaged/broken eggs"}
-                inputProps={{ min: 0 }}
-                variant="outlined"
-                InputLabelProps={{ shrink: true }}
-                sx={{ 
-                  '& .MuiOutlinedInput-root': { 
-                    borderRadius: 1,
-                    bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.05)
-                  }
-                }}
-              />
-            </Grid>
-
-            {/* Total eggs summary */}
+            {/* Total Eggs Summary */}
             <Grid item xs={12}>
-              <Box sx={{ 
-                mt: 2, 
-                p: 2, 
-                bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.05),
-                borderRadius: 2,
-                border: '1px dashed',
-                borderColor: 'primary.main'
-              }}>
-                <Typography variant="subtitle1" fontWeight={600} sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Total Calculated Eggs:</span>
-                  <span>{(formData.fullTrays * 30) + formData.unfullTrayCount - formData.damagedEggs}</span>
+              <Box 
+                sx={{ 
+                  mt: 2,
+                  p: 2, 
+                  bgcolor: (theme: Theme) => alpha(theme.palette.success.light, 0.1),
+                  borderRadius: 1,
+                  border: '1px solid',
+                  borderColor: 'success.light',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <Typography variant="subtitle1" color="success.main" fontWeight={600}>
+                  Total Eggs:
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Calculation: (Full Trays × 30) + Eggs in Unfull Trays - Damaged Eggs
+                <Typography variant="h6" color="success.main" fontWeight={700}>
+                  {(formData.fullTrays * 30) + formData.unfullTrayCount - formData.damagedEggs}
                 </Typography>
               </Box>
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions sx={{ px: 3, py: 3, borderTop: '1px solid', borderColor: 'divider', gap: 1 }}>
+        <DialogActions sx={{ px: 3, py: 2.5, borderTop: '1px solid', borderColor: 'divider' }}>
           <Button 
-            onClick={() => setDialogOpen(false)} 
-            color="inherit"
+            onClick={() => setDialogOpen(false)}
             variant="outlined"
-            size="large"
-            sx={{ borderRadius: 1.5, px: 3, fontWeight: 600 }}
+            color="inherit"
+            sx={{ 
+              mr: 1,
+              px: 3,
+              borderRadius: 1,
+              textTransform: 'none',
+              fontSize: '0.95rem'
+            }}
           >
             Cancel
           </Button>
           <Button 
-            onClick={handleSave} 
-            color="primary" 
+            onClick={handleSave}
             variant="contained"
-            size="large"
-            sx={{ borderRadius: 1.5, px: 4, fontWeight: 600 }}
+            color="primary"
+            sx={{ 
+              px: 4,
+              borderRadius: 1,
+              textTransform: 'none',
+              fontSize: '0.95rem',
+              fontWeight: 600
+            }}
           >
-            {isEditing ? 'Update Record' : 'Save Record'}
+            {isEditing ? 'Update Collection' : 'Save Collection'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1036,4 +1005,4 @@ export default function EggCollection() {
       </Dialog>
     </Box>
   );
-} 
+}
